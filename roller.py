@@ -1,12 +1,16 @@
 import asyncio
 import random
+import re
 
 import yaboli
 from yaboli.utils import *
 from join_rooms import join_rooms # List of rooms kept in separate file, which is .gitignore'd
 
 
-ROLL = r"[!/]roll (\d+)d(\d+)\s*(\+\s*(\d+))?"
+ROLL = r"[!/]roll\s+(.*)"
+THROW     = r"([+-])?\s*(\d+)?d(\d+)\s*"       # 1: sign, 2: amount (default 1), 3: sides
+ADVANTAGE = r"([+-])?\s*(\d+)?([ad])d(\d+)\s*" # 1: sign, 2: amount (default 2), 3: a/d, 4: sides
+NUMBER    = r"([+-])?\s*(\d+)\s*"              # 1: sign, 2: number
 
 class Roller(yaboli.Bot):
 	async def send(self, room, message):
@@ -29,22 +33,87 @@ class Roller(yaboli.Bot):
 
 	@yaboli.trigger(ROLL)
 	async def trigger_roll(self, room, message, match):
-		amount = int(match.group(1))
-		sides = int(match.group(2))
-		bonus = match.group(4)
-		if bonus:
-			bonus = int(bonus)
+		result = 0
+		resultstr = ""
 
-		results = [random.randint(1, sides) for roll in range(amount)]
-		result = sum(results)
-		resultstr = ", ".join(str(r) for r in results)
+		rest = match.group(1)
+		while True:
+			mthrow,     mthrowrest     = self.match_and_split(THROW, rest)
+			madvantage, madvantagerest = self.match_and_split(ADVANTAGE, rest)
+			mnumber,    mnumberrest    = self.match_and_split(NUMBER, rest)
+			if mthrow:
+				sign = self.to_sign(mthrow.group(1))
+				amount = self.to_amount(mthrow.group(2), default=1)
+				sides = self.to_amount(mthrow.group(3))
+				r, rstr = self.throw(amount, sides)
+				rest = mthrowrest
+			elif madvantage:
+				sign = self.to_sign(madvantage.group(1))
+				amount = self.to_amount(madvantage.group(2), default=2)
+				dis = True if madvantage.group(3) == "d" else False
+				sides = self.to_amount(madvantage.group(4))
+				r, rstr = self.advantage(dis, amount, sides)
+				rest = madvantagerest
+			elif mnumber:
+				sign = self.to_sign(mnumber.group(1))
+				amount = self.to_amount(mnumber.group(2))
+				r, rstr = self.number(amount)
+				rest = mnumberrest
+			elif rest:
+				await room.send(f"Syntax error at: {rest!r}")
+				return
+			else:
+				break
 
-		if bonus is not None:
-			text = f"{result + bonus}: {resultstr} + {bonus}"
+			result += sign * r
+			if resultstr:
+				resultstr += f" {'+' if sign == 1 else '-'} "
+			elif sign == -1:
+				resultstr += "-"
+			resultstr += rstr
+
+		resultstr = f"{result}: {resultstr}"
+		await room.send(resultstr, message.mid)
+
+	@staticmethod
+	def match_and_split(regex, string):
+		match = re.match(regex, string)
+		if match:
+			string = string[match.end():]
+		return match, string
+
+	@staticmethod
+	def to_sign(string):
+		if string == "-":
+			return -1
 		else:
-			text = f"{result}: {resultstr}"
+			return 1
 
-		await room.send(text, message.mid)
+	@staticmethod
+	def to_amount(string, default=0):
+		if string is None:
+			return default
+		else:
+			return int(string)
+
+	@staticmethod
+	def throw(amount, sides):
+		results = [random.randint(1, sides) for _ in range(amount)]
+		result = sum(results)
+		resultstr = "(" + "+".join(str(r) for r in results) + ")"
+		return result, resultstr
+
+	@staticmethod
+	def advantage(dis, amount, sides):
+		results = [random.randint(1, sides) for _ in range(amount)]
+		result = min(results) if dis else max(results)
+		resultstr = "(" + ",".join(str(r) for r in results) + ")"
+		resultstr = ("min" if dis else "max") + resultstr
+		return result, resultstr
+
+	@staticmethod
+	def number(number):
+		return number, str(number)
 
 def main():
 	bot = Roller("Roller", "roller.cookie")
