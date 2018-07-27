@@ -36,7 +36,7 @@ class Roller(yaboli.Bot):
 		result = 0
 		resultstr = ""
 
-		rest = match.group(1)
+		rest = match.group(2)
 		while True:
 			mthrow,     mthrowrest     = self.match_and_split(THROW, rest)
 			madvantage, madvantagerest = self.match_and_split(ADVANTAGE, rest)
@@ -60,7 +60,7 @@ class Roller(yaboli.Bot):
 				r, rstr = self.number(amount)
 				rest = mnumberrest
 			elif rest:
-				await room.send(f"Syntax error at: {rest!r}")
+				await room.send(f"Syntax error at: {rest!r}", message.mid)
 				return
 			else:
 				break
