@@ -7,7 +7,7 @@ from yaboli.utils import *
 from join_rooms import join_rooms # List of rooms kept in separate file, which is .gitignore'd
 
 
-ROLL = r"[!/]roll\s+(.*)"
+ROLL = r"[!/]r(oll)?\s+(.*)"
 THROW     = r"([+-])?\s*(\d+)?d(\d+)\s*"       # 1: sign, 2: amount (default 1), 3: sides
 ADVANTAGE = r"([+-])?\s*(\d+)?([ad])d(\d+)\s*" # 1: sign, 2: amount (default 2), 3: a/d, 4: sides
 NUMBER    = r"([+-])?\s*(\d+)\s*"              # 1: sign, 2: number
