@@ -8,9 +8,9 @@ from join_rooms import join_rooms # List of rooms kept in separate file, which i
 
 
 ROLL = r"[!/]r(oll)?\s+(.*)"
-THROW     = r"([+-])?\s*(\d+)?d(\d+)\s*"       # 1: sign, 2: amount (default 1), 3: sides
-ADVANTAGE = r"([+-])?\s*(\d+)?([ad])d(\d+)\s*" # 1: sign, 2: amount (default 2), 3: a/d, 4: sides
-NUMBER    = r"([+-])?\s*(\d+)\s*"              # 1: sign, 2: number
+THROW     = r"\s*([+-])?\s*(\d+)?d(\d+)"       # 1: sign, 2: amount (default 1), 3: sides
+ADVANTAGE = r"\s*([+-])?\s*(\d+)?([ad])d(\d+)" # 1: sign, 2: amount (default 2), 3: a/d, 4: sides
+NUMBER    = r"\s*([+-])?\s*(\d+)"              # 1: sign, 2: number
 
 class Roller(yaboli.Bot):
 	async def send(self, room, message):
@@ -35,6 +35,7 @@ class Roller(yaboli.Bot):
 	async def trigger_roll(self, room, message, match):
 		result = 0
 		resultstr = ""
+		info = None
 
 		rest = match.group(2)
 		while True:
@@ -59,9 +60,13 @@ class Roller(yaboli.Bot):
 				amount = self.to_amount(mnumber.group(2))
 				r, rstr = self.number(amount)
 				rest = mnumberrest
-			elif rest:
-				await room.send(f"Syntax error at: {rest!r}", message.mid)
-				return
+			elif rest.strip():
+				if rest[0].isspace():
+					info = rest.strip()
+					break
+				else:
+					await room.send(f"Syntax error at {rest!r}", message.mid)
+					return
 			else:
 				break
 
@@ -72,7 +77,10 @@ class Roller(yaboli.Bot):
 				resultstr += "-"
 			resultstr += rstr
 
-		resultstr = f"{result}: {resultstr}"
+		if info:
+			resultstr = f"{result}: {resultstr} {info}"
+		else:
+			resultstr = f"{result}: {resultstr}"
 		await room.send(resultstr, message.mid)
 
 	@staticmethod
