@@ -19,7 +19,7 @@ ADVANTAGE = r"\s*([+-])?\s*(\d+)?([ad])d(\d+)" # 1: sign, 2: amount (default 2),
 NUMBER    = r"\s*([+-])?\s*(\d+)"              # 1: sign, 2: number
 
 class Roller(yaboli.Bot):
-	async def send(self, room, message):
+	async def on_send(self, room, message):
 		long_help = (
 			"!roll 2d4 - roll 2 4-sided dice\n"
 			"!roll 2d4+5 - roll 2 4-sided dice with a bonus of 5\n"
@@ -34,8 +34,6 @@ class Roller(yaboli.Bot):
 		await self.botrulez_restart(room, message)
 
 		await self.trigger_roll(room, message)
-
-	forward = send
 
 	@yaboli.trigger(ROLL)
 	async def trigger_roll(self, room, message, match):
