@@ -1,6 +1,11 @@
 import asyncio
+import logging
 import random
 import re
+
+# Turn all debugging on
+asyncio.get_event_loop().set_debug(True)
+logging.basicConfig(level=logging.DEBUG)
 
 import yaboli
 from yaboli.utils import *
