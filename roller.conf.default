@@ -1,0 +1,9 @@
+[general]
+nick = Roller
+cookiefile = roller.cookie
+
+[rooms]
+# Format:
+# room
+# room=password
+test
