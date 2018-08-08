@@ -114,24 +114,30 @@ class Roller:
 
 	@staticmethod
 	def throw(amount, sides):
-		results = [random.randint(1, sides) for _ in range(amount)]
-		result = sum(results)
-		resultstr = "(" + "+".join(str(r) for r in results) + ")"
+		if 0 < amount <= 100 and 0 < sides <= 10000:
+			results = [random.randint(1, sides) for _ in range(amount)]
+			result = sum(results)
+			resultstr = "(" + "+".join(str(r) for r in results) + ")"
+		else:
+			result = 0
+			resultstr = "[invalid throw]"
 		return result, resultstr
 
 	@staticmethod
 	def advantage(dis, amount, sides):
-		results = [random.randint(1, sides) for _ in range(amount)]
-		result = min(results) if dis else max(results)
-		resultstr = "(" + ",".join(str(r) for r in results) + ")"
-		resultstr = ("d" if dis else "a") + resultstr
+		if 0 < amount <= 100 and 0 < sides <= 10000:
+			results = [random.randint(1, sides) for _ in range(amount)]
+			result = min(results) if dis else max(results)
+			resultstr = "(" + ",".join(str(r) for r in results) + ")"
+			resultstr = ("d" if dis else "a") + resultstr
+		else:
+			result = 0
+			resultstr = "[invalid throw]"
 		return result, resultstr
 
 	@staticmethod
 	def number(number):
 		return number, str(number)
-
-
 
 class RollerBot(yaboli.Bot):
 	SHORT_HELP = Roller.SHORT_DESCRIPTION
